@@ -18,6 +18,17 @@ const logoutBtn = document.getElementById("logout-btn");
 const themeToggle = document.getElementById("theme-toggle");
 
 const form = document.getElementById("expense-form");
+const budgetForm = document.getElementById("budget-form");
+const budgetAmountInput = document.getElementById("budget-amount");
+const budgetPeriodInput = document.getElementById("budget-period");
+const currencyInput = document.getElementById("currency");
+const budgetError = document.getElementById("budget-error");
+const budgetStatus = document.getElementById("budget-status");
+const budgetPeriodLabel = document.getElementById("budget-period-label");
+const budgetFigures = document.getElementById("budget-figures");
+const budgetFill = document.getElementById("budget-fill");
+const budgetNote = document.getElementById("budget-note");
+const removeBudgetBtn = document.getElementById("remove-budget-btn");
 const dateInput = document.getElementById("date");
 const categoryInput = document.getElementById("category");
 const descriptionInput = document.getElementById("description");
@@ -29,6 +40,8 @@ const summaryEl = document.getElementById("summary");
 
 let currentUser = null;
 let expenses = [];
+let currentCurrency = "USD";
+let budget = null;
 
 function loadUsers() {
   try {
@@ -210,6 +223,59 @@ logoutBtn.addEventListener("click", () => {
   endApp();
 });
 
+budgetForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  budgetError.hidden = true;
+
+  const amount = parseFloat(budgetAmountInput.value);
+  const period = budgetPeriodInput.value;
+
+  if (!amount || amount <= 0) {
+    budgetError.textContent = "Budget must be a positive number.";
+    budgetError.hidden = false;
+    return;
+  }
+  if (period !== "day" && period !== "week" && period !== "month") {
+    budgetError.textContent = "Choose a period: day, week, or month.";
+    budgetError.hidden = false;
+    return;
+  }
+
+  budget = { amount, period };
+  try {
+    localStorage.setItem(budgetKey(), JSON.stringify(budget));
+  } catch {
+    budgetError.textContent = "Could not save budget. Browser storage is unavailable.";
+    budgetError.hidden = false;
+    return;
+  }
+  render();
+});
+
+currencyInput.addEventListener("change", () => {
+  currentCurrency = currencyInput.value === "PHP" ? "PHP" : "USD";
+  currencyInput.value = currentCurrency;
+  try {
+    localStorage.setItem(currencyKey(), currentCurrency);
+  } catch {
+    // currency applies for this session only
+  }
+  render();
+});
+
+removeBudgetBtn.addEventListener("click", () => {
+  budget = null;
+  try {
+    localStorage.removeItem(budgetKey());
+  } catch {
+    // nothing stored to clear
+  }
+  budgetForm.reset();
+  currencyInput.value = currentCurrency;
+  budgetError.hidden = true;
+  render();
+});
+
 function startApp(username) {
   currentUser = username;
   setSession(username);
@@ -220,6 +286,17 @@ function startApp(username) {
 
   migrateLegacyData();
   expenses = loadExpenses();
+  currentCurrency = loadCurrency();
+  currencyInput.value = currentCurrency;
+  budget = loadBudget();
+  if (budget) {
+    budgetAmountInput.value = budget.amount;
+    budgetPeriodInput.value = budget.period;
+  } else {
+    budgetForm.reset();
+    currencyInput.value = currentCurrency;
+  }
+  budgetError.hidden = true;
 
   const today = new Date().toISOString().slice(0, 10);
   dateInput.value = today;
@@ -231,7 +308,14 @@ function startApp(username) {
 function endApp() {
   currentUser = null;
   expenses = [];
+  budget = null;
+  currentCurrency = "USD";
   clearSession();
+  budgetForm.reset();
+  budgetStatus.hidden = true;
+  removeBudgetBtn.hidden = true;
+  budgetError.hidden = true;
+  syncSelects();
   appScreen.hidden = true;
   authScreen.hidden = true;
   switchTab("login");
@@ -240,6 +324,38 @@ function endApp() {
 
 function expenseKey() {
   return `expenses:${currentUser}`;
+}
+
+function currencyKey() {
+  return `currency:${currentUser}`;
+}
+
+function budgetKey() {
+  return `budget:${currentUser}`;
+}
+
+function loadCurrency() {
+  try {
+    const value = localStorage.getItem(currencyKey());
+    return value === "PHP" ? "PHP" : "USD";
+  } catch {
+    return "USD";
+  }
+}
+
+function loadBudget() {
+  try {
+    const raw = localStorage.getItem(budgetKey());
+    if (!raw) return null;
+    const stored = JSON.parse(raw);
+    const amount = Number(stored && stored.amount);
+    const period = stored && stored.period;
+    if (!(amount > 0)) return null;
+    if (period !== "day" && period !== "week" && period !== "month") return null;
+    return { amount, period };
+  } catch {
+    return null;
+  }
 }
 
 function migrateLegacyData() {
@@ -264,7 +380,10 @@ function saveExpenses() {
 }
 
 function formatAmount(value) {
-  return Number(value).toLocaleString(undefined, {
+  const locale = currentCurrency === "PHP" ? "en-PH" : "en-US";
+  return Number(value).toLocaleString(locale, {
+    style: "currency",
+    currency: currentCurrency,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
@@ -310,6 +429,7 @@ form.addEventListener("submit", (event) => {
   render();
   form.reset();
   dateInput.value = new Date().toISOString().slice(0, 10);
+  syncSelects();
   hideError();
 });
 
@@ -335,6 +455,8 @@ listBody.addEventListener("click", (event) => {
 function render() {
   renderList();
   renderSummary();
+  renderBudget();
+  syncSelects();
 }
 
 function renderList() {
@@ -437,6 +559,145 @@ function renderSummary() {
   }
 
   summaryEl.append(stats, bars);
+}
+
+function toISODate(date) {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+function spentInPeriod(period) {
+  const today = new Date();
+  const todayStr = toISODate(today);
+  let startStr;
+
+  if (period === "day") {
+    startStr = todayStr;
+  } else if (period === "week") {
+    const start = new Date(today);
+    start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+    startStr = toISODate(start);
+  } else {
+    startStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-01`;
+  }
+
+  return expenses
+    .filter((expense) => expense.date >= startStr && expense.date <= todayStr)
+    .reduce((sum, expense) => sum + Number(expense.amount), 0);
+}
+
+function renderBudget() {
+  budgetStatus.hidden = !budget;
+  removeBudgetBtn.hidden = !budget;
+  if (!budget) return;
+
+  const spent = spentInPeriod(budget.period);
+  const remaining = budget.amount - spent;
+  const percent = Math.min(100, (spent / budget.amount) * 100);
+  const labels = { day: "Today", week: "This week", month: "This month" };
+
+  budgetPeriodLabel.textContent = labels[budget.period];
+  budgetFigures.textContent = `${formatAmount(spent)} of ${formatAmount(budget.amount)}`;
+  budgetFill.style.width = `${percent}%`;
+
+  const over = spent > budget.amount;
+  budgetFill.classList.toggle("over", over);
+  budgetNote.classList.toggle("over", over);
+  budgetNote.textContent = over
+    ? `Over budget by ${formatAmount(spent - budget.amount)}`
+    : `${formatAmount(remaining)} left`;
+}
+
+function initCustomSelect(select) {
+  const wrap = document.createElement("div");
+  wrap.className = "select";
+  select.classList.add("select-source");
+  select.insertAdjacentElement("afterend", wrap);
+
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "select-btn";
+  btn.setAttribute("aria-haspopup", "listbox");
+  btn.setAttribute("aria-expanded", "false");
+
+  const label = document.createElement("span");
+  label.className = "select-label";
+  const caret = document.createElement("span");
+  caret.className = "select-caret";
+  caret.textContent = "▾";
+  btn.append(label, caret);
+
+  const menu = document.createElement("ul");
+  menu.className = "select-menu";
+  menu.setAttribute("role", "listbox");
+  menu.hidden = true;
+
+  for (const option of select.options) {
+    if (!option.value) continue;
+    const item = document.createElement("li");
+    item.setAttribute("role", "option");
+    item.dataset.value = option.value;
+    item.textContent = option.textContent;
+    menu.appendChild(item);
+  }
+
+  wrap.append(btn, menu);
+
+  function open() {
+    menu.hidden = false;
+    btn.setAttribute("aria-expanded", "true");
+  }
+
+  function close() {
+    menu.hidden = true;
+    btn.setAttribute("aria-expanded", "false");
+  }
+
+  function sync() {
+    const selected = select.selectedOptions[0];
+    label.textContent = selected ? selected.textContent : "";
+    label.classList.toggle("placeholder", !select.value);
+    for (const item of menu.children) {
+      const isActive = item.dataset.value === select.value;
+      item.classList.toggle("active", isActive);
+      item.setAttribute("aria-selected", String(isActive));
+    }
+  }
+
+  btn.addEventListener("click", () => {
+    if (menu.hidden) open();
+    else close();
+  });
+
+  menu.addEventListener("click", (event) => {
+    const item = event.target.closest("[data-value]");
+    if (!item) return;
+    select.value = item.dataset.value;
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+    sync();
+    close();
+  });
+
+  select.addEventListener("change", sync);
+
+  document.addEventListener("click", (event) => {
+    if (!wrap.contains(event.target)) close();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") close();
+  });
+
+  sync();
+  return { sync, close };
+}
+
+const customSelects = ["category", "budget-period", "currency"].map((id) =>
+  initCustomSelect(document.getElementById(id))
+);
+
+function syncSelects() {
+  for (const select of customSelects) select.sync();
 }
 
 function init() {

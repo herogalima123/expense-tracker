@@ -96,6 +96,47 @@
         <div class="dashboard">
           <div class="dash-col">
             <section class="card">
+              <div class="card-head">
+                <h2>Budget</h2>
+                <button type="button" class="btn-ghost btn-remove" id="remove-budget-btn" hidden>Remove</button>
+              </div>
+              <form id="budget-form">
+                <div class="form-grid">
+                  <label>
+                    Amount
+                    <input type="number" id="budget-amount" placeholder="0.00" min="0.01" step="0.01" required />
+                  </label>
+                  <label>
+                    Period
+                    <select id="budget-period" required>
+                      <option value="" disabled selected>Choose</option>
+                      <option value="day">Per day</option>
+                      <option value="week">Per week</option>
+                      <option value="month">Per month</option>
+                    </select>
+                  </label>
+                  <label>
+                    Currency
+                    <select id="currency">
+                      <option value="USD">USD &mdash; US Dollar</option>
+                      <option value="PHP">PHP &mdash; Philippine Peso</option>
+                    </select>
+                  </label>
+                </div>
+                <p class="error" id="budget-error" hidden></p>
+                <button type="submit" class="btn-primary">Save Budget</button>
+              </form>
+              <div class="budget-status" id="budget-status" hidden>
+                <div class="budget-head">
+                  <span class="period" id="budget-period-label"></span>
+                  <span class="figures" id="budget-figures"></span>
+                </div>
+                <div class="track"><div class="fill" id="budget-fill"></div></div>
+                <p class="budget-note" id="budget-note"></p>
+              </div>
+            </section>
+
+            <section class="card">
               <div class="card-head"><h2>Add Expense</h2></div>
               <form id="expense-form">
                 <div class="form-grid">
