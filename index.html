@@ -85,124 +85,162 @@
       </section>
 
       <div id="app-screen" hidden>
-        <div class="user-bar card">
-          <span class="user-chip">
-            <span class="avatar" id="user-avatar"></span>
-            Logged in as <strong id="current-user"></strong>
-          </span>
-          <button type="button" class="btn-ghost" id="logout-btn">Log out</button>
-        </div>
+        <nav class="nav-bar" aria-label="Pages">
+          <button type="button" class="nav-btn" data-page="budget">Budget</button>
+          <button type="button" class="nav-btn" data-page="expenses">Expenses</button>
+          <button type="button" class="nav-btn" data-page="summary">Summary</button>
+          <button type="button" class="nav-btn" data-page="settings">Settings</button>
+        </nav>
 
-        <div class="dashboard">
-          <div class="dash-col">
-            <section class="card">
-              <div class="card-head">
-                <h2>Budget</h2>
-                <button type="button" class="btn-ghost btn-remove" id="remove-budget-btn" hidden>Remove</button>
+        <section class="page" data-page="budget" hidden>
+          <div class="card page-sm">
+            <div class="card-head">
+              <h2>Budget</h2>
+              <button type="button" class="btn-ghost btn-remove" id="remove-budget-btn" hidden>Remove</button>
+            </div>
+            <form id="budget-form">
+              <div class="form-grid">
+                <label>
+                  Amount
+                  <input type="number" id="budget-amount" placeholder="0.00" min="0.01" step="0.01" required />
+                </label>
+                <label>
+                  Period
+                  <select id="budget-period" required>
+                    <option value="" disabled selected>Choose</option>
+                    <option value="day">Per day</option>
+                    <option value="week">Per week</option>
+                    <option value="month">Per month</option>
+                  </select>
+                </label>
               </div>
-              <form id="budget-form">
-                <div class="form-grid">
-                  <label>
-                    Amount
-                    <input type="number" id="budget-amount" placeholder="0.00" min="0.01" step="0.01" required />
-                  </label>
-                  <label>
-                    Period
-                    <select id="budget-period" required>
-                      <option value="" disabled selected>Choose</option>
-                      <option value="day">Per day</option>
-                      <option value="week">Per week</option>
-                      <option value="month">Per month</option>
-                    </select>
-                  </label>
-                  <label>
-                    Currency
-                    <select id="currency">
-                      <option value="USD">USD &mdash; US Dollar</option>
-                      <option value="PHP">PHP &mdash; Philippine Peso</option>
-                    </select>
-                  </label>
-                </div>
-                <p class="error" id="budget-error" hidden></p>
-                <button type="submit" class="btn-primary">Save Budget</button>
-              </form>
-              <div class="budget-status" id="budget-status" hidden>
-                <div class="budget-head">
-                  <span class="period" id="budget-period-label"></span>
-                  <span class="figures" id="budget-figures"></span>
-                </div>
-                <div class="track"><div class="fill" id="budget-fill"></div></div>
-                <p class="budget-note" id="budget-note"></p>
+              <p class="error" id="budget-error" hidden></p>
+              <button type="submit" class="btn-primary">Save Budget</button>
+            </form>
+            <div class="budget-status" id="budget-status" hidden>
+              <div class="budget-head">
+                <span class="period" id="budget-period-label"></span>
+                <span class="figures" id="budget-figures"></span>
               </div>
-            </section>
+              <div class="track"><div class="fill" id="budget-fill"></div></div>
+              <p class="budget-note" id="budget-note"></p>
+            </div>
+          </div>
+        </section>
 
-            <section class="card">
-              <div class="card-head"><h2>Add Expense</h2></div>
-              <form id="expense-form">
-                <div class="form-grid">
-                  <label>
-                    Date
-                    <input type="date" id="date" required />
-                  </label>
-                  <label>
-                    Category
-                    <select id="category" required>
-                      <option value="" disabled selected>Choose category</option>
-                      <option>Food</option>
-                      <option>Transport</option>
-                      <option>Shopping</option>
-                      <option>Bills</option>
-                      <option>Entertainment</option>
-                      <option>Health</option>
-                      <option>Other</option>
-                    </select>
-                  </label>
-                  <label>
-                    Description
-                    <input type="text" id="description" placeholder="e.g. Lunch at cafe" maxlength="80" required />
-                  </label>
-                  <label>
-                    Amount
-                    <input type="number" id="amount" placeholder="0.00" min="0.01" step="0.01" required />
-                  </label>
-                </div>
-                <p class="error" id="form-error" hidden></p>
-                <button type="submit" class="btn-primary">Add Expense</button>
-              </form>
-            </section>
-
-            <section class="card">
-              <div class="card-head"><h2>Summary</h2></div>
-              <div id="summary">
-                <p class="empty">No expenses yet.</p>
+        <section class="page" data-page="expenses" hidden>
+          <div class="card">
+            <div class="card-head"><h2>Add Expense</h2></div>
+            <form id="expense-form">
+              <div class="form-grid">
+                <label>
+                  Date
+                  <input type="date" id="date" required />
+                </label>
+                <label>
+                  Category
+                  <select id="category" required>
+                    <option value="" disabled selected>Choose category</option>
+                    <option>Food</option>
+                    <option>Transport</option>
+                    <option>Shopping</option>
+                    <option>Bills</option>
+                    <option>Entertainment</option>
+                    <option>Health</option>
+                    <option>Other</option>
+                  </select>
+                </label>
+                <label>
+                  Description
+                  <input type="text" id="description" placeholder="e.g. Lunch at cafe" maxlength="80" required />
+                </label>
+                <label>
+                  Amount
+                  <input type="number" id="amount" placeholder="0.00" min="0.01" step="0.01" required />
+                </label>
               </div>
-            </section>
+              <p class="error" id="form-error" hidden></p>
+              <button type="submit" class="btn-primary">Add Expense</button>
+            </form>
           </div>
 
-          <div class="dash-col">
-            <section class="card">
-              <div class="card-head">
-                <h2>Expenses</h2>
-                <span class="count-pill" id="expense-count" hidden></span>
-              </div>
-              <div class="table-wrap">
-                <table id="expense-table">
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Category</th>
-                      <th>Description</th>
-                      <th class="num">Amount</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody id="expense-list"></tbody>
-                </table>
-                <p class="empty" id="empty-state">No expenses yet. Add your first one above.</p>
-              </div>
-            </section>
+          <div class="card">
+            <div class="card-head">
+              <h2>Expenses</h2>
+              <span class="count-pill" id="expense-count" hidden></span>
+            </div>
+            <div class="table-wrap">
+              <table id="expense-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th class="num">Amount</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="expense-list"></tbody>
+              </table>
+              <p class="empty" id="empty-state">No expenses yet. Add your first one above.</p>
+            </div>
           </div>
-        </div>
+        </section>
+
+        <section class="page" data-page="summary" hidden>
+          <div class="card page-sm">
+            <div class="card-head"><h2>Summary</h2></div>
+            <div id="summary">
+              <p class="empty">No expenses yet.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" data-page="settings" hidden>
+          <div class="card page-sm">
+            <div class="card-head"><h2>Settings</h2></div>
+            <div class="settings-list">
+              <div class="setting-row">
+                <div>
+                  <div class="setting-name">Currency</div>
+                  <div class="setting-desc">Format all amounts in USD or PHP.</div>
+                </div>
+                <label class="sr-only" for="currency">Currency</label>
+                <select id="currency">
+                  <option value="USD">USD &mdash; US Dollar</option>
+                  <option value="PHP">PHP &mdash; Philippine Peso</option>
+                </select>
+              </div>
+              <div class="setting-row">
+                <div>
+                  <div class="setting-name">Theme</div>
+                  <div class="setting-desc">Switch between light and dark mode.</div>
+                </div>
+                <button type="button" class="btn-ghost" id="theme-toggle-settings">Dark mode</button>
+              </div>
+              <div class="setting-row">
+                <div>
+                  <div class="setting-name">Reset data</div>
+                  <div class="setting-desc">Delete all expenses and your budget for this account.</div>
+                </div>
+                <button type="button" class="btn-ghost btn-remove" id="reset-data-btn">Reset</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card page-sm">
+            <div class="setting-row">
+              <div class="user-chip">
+                <span class="avatar" id="user-avatar"></span>
+                <div>
+                  <div class="setting-name">Account</div>
+                  <div class="setting-desc">Logged in as <strong id="current-user"></strong></div>
+                </div>
+              </div>
+              <button type="button" class="btn-ghost btn-remove" id="logout-btn">Log out</button>
+            </div>
+          </div>
+        </section>
       </div>
     </main>
 

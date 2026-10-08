@@ -16,6 +16,7 @@ const userAvatar = document.getElementById("user-avatar");
 const expenseCount = document.getElementById("expense-count");
 const logoutBtn = document.getElementById("logout-btn");
 const themeToggle = document.getElementById("theme-toggle");
+const themeToggleSettings = document.getElementById("theme-toggle-settings");
 
 const form = document.getElementById("expense-form");
 const budgetForm = document.getElementById("budget-form");
@@ -29,6 +30,9 @@ const budgetFigures = document.getElementById("budget-figures");
 const budgetFill = document.getElementById("budget-fill");
 const budgetNote = document.getElementById("budget-note");
 const removeBudgetBtn = document.getElementById("remove-budget-btn");
+const resetDataBtn = document.getElementById("reset-data-btn");
+const navButtons = document.querySelectorAll(".nav-bar .nav-btn");
+const pages = document.querySelectorAll(".page");
 const dateInput = document.getElementById("date");
 const categoryInput = document.getElementById("category");
 const descriptionInput = document.getElementById("description");
@@ -127,9 +131,26 @@ tabRegister.addEventListener("click", () => switchTab("register"));
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
   const isDark = theme === "dark";
-  themeToggle.textContent = isDark ? "Light mode" : "Dark mode";
-  themeToggle.setAttribute("aria-pressed", String(isDark));
+  const label = isDark ? "Light mode" : "Dark mode";
+  for (const button of [themeToggle, themeToggleSettings]) {
+    button.textContent = label;
+    button.setAttribute("aria-pressed", String(isDark));
+  }
 }
+
+function toggleTheme() {
+  const next =
+    document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  applyTheme(next);
+  try {
+    localStorage.setItem(THEME_KEY, next);
+  } catch {
+    // theme stays for this session only
+  }
+}
+
+themeToggle.addEventListener("click", toggleTheme);
+themeToggleSettings.addEventListener("click", toggleTheme);
 
 let storedTheme = null;
 try {
@@ -144,17 +165,6 @@ applyTheme(
       ? "dark"
       : "light")
 );
-
-themeToggle.addEventListener("click", () => {
-  const next =
-    document.documentElement.dataset.theme === "dark" ? "light" : "dark";
-  applyTheme(next);
-  try {
-    localStorage.setItem(THEME_KEY, next);
-  } catch {
-    // theme stays for this session only
-  }
-});
 
 registerForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -221,6 +231,40 @@ loginForm.addEventListener("submit", async (event) => {
 
 logoutBtn.addEventListener("click", () => {
   endApp();
+});
+
+function showPage(page) {
+  for (const btn of navButtons) {
+    btn.classList.toggle("active", btn.dataset.page === page);
+  }
+  for (const section of pages) {
+    section.hidden = section.dataset.page !== page;
+  }
+}
+
+navButtons.forEach((btn) =>
+  btn.addEventListener("click", () => showPage(btn.dataset.page))
+);
+
+resetDataBtn.addEventListener("click", () => {
+  if (!confirm("Delete all your expenses and your budget for this account?")) {
+    return;
+  }
+  expenses = [];
+  budget = null;
+  try {
+    localStorage.removeItem(expenseKey());
+    localStorage.removeItem(budgetKey());
+    localStorage.removeItem(currencyKey());
+  } catch {
+    // nothing left to clear
+  }
+  currentCurrency = "USD";
+  budgetForm.reset();
+  currencyInput.value = currentCurrency;
+  budgetError.hidden = true;
+  syncSelects();
+  render();
 });
 
 budgetForm.addEventListener("submit", (event) => {
@@ -303,6 +347,7 @@ function startApp(username) {
   dateInput.max = today;
 
   render();
+  showPage("expenses");
 }
 
 function endApp() {
@@ -558,7 +603,36 @@ function renderSummary() {
     bars.appendChild(row);
   }
 
-  summaryEl.append(stats, bars);
+  const budgetBlock = buildSummaryBudget();
+
+  summaryEl.append(stats, budgetBlock, bars);
+}
+
+function buildSummaryBudget() {
+  const block = document.createElement("div");
+  if (!budget) return block;
+
+  const spent = spentInPeriod(budget.period);
+  const remaining = budget.amount - spent;
+  const percent = Math.min(100, (spent / budget.amount) * 100);
+  const labels = { day: "Today", week: "This week", month: "This month" };
+  const over = spent >= budget.amount;
+
+  block.className = "budget-status";
+  const note = over
+    ? spent > budget.amount
+      ? `Over budget by ${formatAmount(spent - budget.amount)}`
+      : "Budget limit reached"
+    : `${formatAmount(remaining)} left`;
+  block.innerHTML = `
+    <div class="budget-head">
+      <span class="period">Budget &mdash; ${labels[budget.period]}</span>
+      <span class="figures${over ? " over" : ""}">${formatAmount(spent)} of ${formatAmount(budget.amount)}</span>
+    </div>
+    <div class="track"><div class="fill${over ? " over" : ""}" style="width: ${percent}%"></div></div>
+    <p class="budget-note${over ? " over" : ""}">${note}</p>`;
+
+  return block;
 }
 
 function toISODate(date) {
@@ -601,12 +675,16 @@ function renderBudget() {
   budgetFigures.textContent = `${formatAmount(spent)} of ${formatAmount(budget.amount)}`;
   budgetFill.style.width = `${percent}%`;
 
-  const over = spent > budget.amount;
+  const over = spent >= budget.amount;
   budgetFill.classList.toggle("over", over);
   budgetNote.classList.toggle("over", over);
-  budgetNote.textContent = over
-    ? `Over budget by ${formatAmount(spent - budget.amount)}`
-    : `${formatAmount(remaining)} left`;
+  budgetFigures.classList.toggle("over", over);
+  budgetNote.textContent =
+    spent > budget.amount
+      ? `Over budget by ${formatAmount(spent - budget.amount)}`
+      : spent === budget.amount
+        ? "Budget limit reached"
+        : `${formatAmount(remaining)} left`;
 }
 
 function initCustomSelect(select) {
