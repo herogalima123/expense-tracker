@@ -13,66 +13,114 @@
       <p class="subtitle">Track your spending, see where your money goes.</p>
     </header>
 
-    <section class="card">
-      <h2>Add Expense</h2>
-      <form id="expense-form">
+    <section class="card" id="auth-screen">
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab active" id="tab-login">Log In</button>
+        <button type="button" class="auth-tab" id="tab-register">Create Account</button>
+      </div>
+
+      <form id="login-form">
         <div class="form-grid">
           <label>
-            Date
-            <input type="date" id="date" required />
+            Username
+            <input type="text" id="login-username" autocomplete="username" maxlength="20" required />
           </label>
           <label>
-            Category
-            <select id="category" required>
-              <option value="" disabled selected>Choose category</option>
-              <option>Food</option>
-              <option>Transport</option>
-              <option>Shopping</option>
-              <option>Bills</option>
-              <option>Entertainment</option>
-              <option>Health</option>
-              <option>Other</option>
-            </select>
-          </label>
-          <label>
-            Description
-            <input type="text" id="description" placeholder="e.g. Lunch at cafe" maxlength="80" required />
-          </label>
-          <label>
-            Amount
-            <input type="number" id="amount" placeholder="0.00" min="0.01" step="0.01" required />
+            Password
+            <input type="password" id="login-password" autocomplete="current-password" required />
           </label>
         </div>
-        <p class="error" id="form-error" hidden></p>
-        <button type="submit" class="btn-primary">Add Expense</button>
+        <p class="error" id="login-error" hidden></p>
+        <button type="submit" class="btn-primary">Log In</button>
+      </form>
+
+      <form id="register-form" hidden>
+        <div class="form-grid">
+          <label>
+            Username
+            <input type="text" id="register-username" autocomplete="username" maxlength="20" placeholder="3-20 letters or numbers" required />
+          </label>
+          <label>
+            Password
+            <input type="password" id="register-password" autocomplete="new-password" minlength="6" placeholder="At least 6 characters" required />
+          </label>
+          <label>
+            Confirm Password
+            <input type="password" id="register-confirm" autocomplete="new-password" minlength="6" required />
+          </label>
+        </div>
+        <p class="error" id="register-error" hidden></p>
+        <button type="submit" class="btn-primary">Create Account</button>
       </form>
     </section>
 
-    <section class="card">
-      <h2>Summary</h2>
-      <div id="summary">
-        <p class="empty">No expenses yet.</p>
+    <div id="app-screen" hidden>
+      <div class="user-bar card">
+        <span>Logged in as <strong id="current-user"></strong></span>
+        <button type="button" class="btn-secondary" id="logout-btn">Log out</button>
       </div>
-    </section>
 
-    <section class="card">
-      <h2>Expenses</h2>
-      <div class="table-wrap">
-        <table id="expense-table">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Category</th>
-              <th>Description</th>
-              <th class="num">Amount</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="expense-list"></tbody>
-        </table>
-        <p class="empty" id="empty-state">No expenses yet. Add your first one above.</p>
-      </div>
-    </section>
+      <section class="card">
+        <h2>Add Expense</h2>
+        <form id="expense-form">
+          <div class="form-grid">
+            <label>
+              Date
+              <input type="date" id="date" required />
+            </label>
+            <label>
+              Category
+              <select id="category" required>
+                <option value="" disabled selected>Choose category</option>
+                <option>Food</option>
+                <option>Transport</option>
+                <option>Shopping</option>
+                <option>Bills</option>
+                <option>Entertainment</option>
+                <option>Health</option>
+                <option>Other</option>
+              </select>
+            </label>
+            <label>
+              Description
+              <input type="text" id="description" placeholder="e.g. Lunch at cafe" maxlength="80" required />
+            </label>
+            <label>
+              Amount
+              <input type="number" id="amount" placeholder="0.00" min="0.01" step="0.01" required />
+            </label>
+          </div>
+          <p class="error" id="form-error" hidden></p>
+          <button type="submit" class="btn-primary">Add Expense</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>Summary</h2>
+        <div id="summary">
+          <p class="empty">No expenses yet.</p>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Expenses</h2>
+        <div class="table-wrap">
+          <table id="expense-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Category</th>
+                <th>Description</th>
+                <th class="num">Amount</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="expense-list"></tbody>
+          </table>
+          <p class="empty" id="empty-state">No expenses yet. Add your first one above.</p>
+        </div>
+      </section>
+    </div>
   </main>
 
   <script src="script.js"></script>
