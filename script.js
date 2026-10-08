@@ -1,5 +1,6 @@
 const USERS_KEY = "et_users";
 const SESSION_KEY = "et_session";
+const THEME_KEY = "et_theme";
 const LEGACY_KEY = "expenses";
 
 const authScreen = document.getElementById("auth-screen");
@@ -12,6 +13,7 @@ const loginError = document.getElementById("login-error");
 const registerError = document.getElementById("register-error");
 const currentUserEl = document.getElementById("current-user");
 const logoutBtn = document.getElementById("logout-btn");
+const themeToggle = document.getElementById("theme-toggle");
 
 const form = document.getElementById("expense-form");
 const dateInput = document.getElementById("date");
@@ -106,6 +108,38 @@ function switchTab(tab) {
 
 tabLogin.addEventListener("click", () => switchTab("login"));
 tabRegister.addEventListener("click", () => switchTab("register"));
+
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  const isDark = theme === "dark";
+  themeToggle.textContent = isDark ? "Light mode" : "Dark mode";
+  themeToggle.setAttribute("aria-pressed", String(isDark));
+}
+
+let savedTheme = null;
+try {
+  savedTheme = localStorage.getItem(THEME_KEY);
+} catch {
+  savedTheme = null;
+}
+applyTheme(
+  savedTheme ||
+    (window.matchMedia &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light")
+);
+
+themeToggle.addEventListener("click", () => {
+  const next =
+    document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  applyTheme(next);
+  try {
+    localStorage.setItem(THEME_KEY, next);
+  } catch {
+    // theme stays for this session only
+  }
+});
 
 registerForm.addEventListener("submit", async (event) => {
   event.preventDefault();

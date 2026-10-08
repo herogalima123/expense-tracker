@@ -5,12 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Expense Tracker</title>
   <link rel="stylesheet" href="style.css" />
+  <script>
+    try {
+      var savedTheme = localStorage.getItem("et_theme");
+      if (!savedTheme) {
+        savedTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light";
+      }
+      document.documentElement.dataset.theme = savedTheme;
+    } catch (e) {}
+  </script>
 </head>
 <body>
   <main class="container">
-    <header>
-      <h1>Expense Tracker</h1>
-      <p class="subtitle">Track your spending, see where your money goes.</p>
+    <header class="header-bar">
+      <div>
+        <h1>Expense Tracker</h1>
+        <p class="subtitle">Track your spending, see where your money goes.</p>
+      </div>
+      <button type="button" class="btn-secondary theme-toggle" id="theme-toggle">Dark mode</button>
     </header>
 
     <section class="card" id="auth-screen">
