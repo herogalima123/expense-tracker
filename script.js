@@ -12,6 +12,8 @@ const registerForm = document.getElementById("register-form");
 const loginError = document.getElementById("login-error");
 const registerError = document.getElementById("register-error");
 const currentUserEl = document.getElementById("current-user");
+const userAvatar = document.getElementById("user-avatar");
+const expenseCount = document.getElementById("expense-count");
 const logoutBtn = document.getElementById("logout-btn");
 const themeToggle = document.getElementById("theme-toggle");
 
@@ -212,6 +214,7 @@ function startApp(username) {
   currentUser = username;
   setSession(username);
   currentUserEl.textContent = username;
+  userAvatar.textContent = username.charAt(0).toUpperCase();
   authScreen.hidden = true;
   appScreen.hidden = false;
 
@@ -270,6 +273,10 @@ function formatAmount(value) {
 function formatDate(value) {
   const [year, month, day] = value.split("-");
   return `${month}/${day}/${year}`;
+}
+
+function categoryClass(category) {
+  return category.toLowerCase().replace(/[^a-z]/g, "");
 }
 
 form.addEventListener("submit", (event) => {
@@ -344,7 +351,10 @@ function renderList() {
     dateCell.textContent = formatDate(expense.date);
 
     const categoryCell = document.createElement("td");
-    categoryCell.textContent = expense.category;
+    const badge = document.createElement("span");
+    badge.className = `badge badge-${categoryClass(expense.category)}`;
+    badge.textContent = expense.category;
+    categoryCell.appendChild(badge);
 
     const descriptionCell = document.createElement("td");
     descriptionCell.textContent = expense.description;
@@ -366,6 +376,8 @@ function renderList() {
   }
 
   emptyState.hidden = expenses.length > 0;
+  expenseCount.hidden = expenses.length === 0;
+  expenseCount.textContent = `${expenses.length} ${expenses.length === 1 ? "entry" : "entries"}`;
 }
 
 function renderSummary() {
@@ -374,12 +386,29 @@ function renderSummary() {
   if (expenses.length === 0) {
     const empty = document.createElement("p");
     empty.className = "empty";
-    empty.textContent = "No expenses yet.";
+    empty.textContent = "No expenses yet. Your totals will appear here.";
     summaryEl.appendChild(empty);
     return;
   }
 
   const total = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
+  const average = total / expenses.length;
+
+  const stats = document.createElement("div");
+  stats.className = "stats";
+  stats.innerHTML = `
+    <div class="stat total">
+      <span class="stat-label">Total</span>
+      <span class="stat-value">${formatAmount(total)}</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Entries</span>
+      <span class="stat-value">${expenses.length}</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Average</span>
+      <span class="stat-value">${formatAmount(average)}</span>
+    </div>`;
 
   const byCategory = {};
   for (const expense of expenses) {
@@ -388,20 +417,26 @@ function renderSummary() {
   }
 
   const categories = Object.entries(byCategory).sort((a, b) => b[1] - a[1]);
+  const max = categories[0][1];
 
-  const totalRow = document.createElement("div");
-  totalRow.className = "summary-total";
-  totalRow.innerHTML = `<span>Total spent</span><span class="amount">${formatAmount(total)}</span>`;
+  const bars = document.createElement("div");
+  bars.className = "bars";
 
-  const list = document.createElement("ul");
-  list.className = "summary-list";
   for (const [category, amount] of categories) {
-    const item = document.createElement("li");
-    item.innerHTML = `<span class="cat">${category}</span><span>${formatAmount(amount)}</span>`;
-    list.appendChild(item);
+    const row = document.createElement("div");
+    row.className = `bar-row bar-${categoryClass(category)}`;
+    const width = Math.max(4, Math.round((amount / max) * 100));
+    const share = Math.round((amount / total) * 100);
+    row.innerHTML = `
+      <div class="bar-head">
+        <span class="cat">${category}</span>
+        <span class="amt">${formatAmount(amount)} &middot; ${share}%</span>
+      </div>
+      <div class="track"><div class="fill" style="width: ${width}%"></div></div>`;
+    bars.appendChild(row);
   }
 
-  summaryEl.append(totalRow, list);
+  summaryEl.append(stats, bars);
 }
 
 function init() {
