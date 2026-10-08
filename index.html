@@ -6,15 +6,17 @@
   <title>Expense Tracker</title>
   <link rel="stylesheet" href="style.css" />
   <script>
-    try {
-      var savedTheme = localStorage.getItem("et_theme");
-      if (!savedTheme) {
-        savedTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
-          ? "dark"
-          : "light";
-      }
-      document.documentElement.dataset.theme = savedTheme;
-    } catch (e) {}
+    (function () {
+      try {
+        var stored = localStorage.getItem("et_theme");
+        if (!stored) {
+          stored = window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light";
+        }
+        document.documentElement.dataset.theme = stored;
+      } catch (e) {}
+    })();
   </script>
 </head>
 <body>

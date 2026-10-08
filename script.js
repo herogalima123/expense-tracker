@@ -116,14 +116,14 @@ function applyTheme(theme) {
   themeToggle.setAttribute("aria-pressed", String(isDark));
 }
 
-let savedTheme = null;
+let storedTheme = null;
 try {
-  savedTheme = localStorage.getItem(THEME_KEY);
+  storedTheme = localStorage.getItem(THEME_KEY);
 } catch {
-  savedTheme = null;
+  storedTheme = null;
 }
 applyTheme(
-  savedTheme ||
+  storedTheme ||
     (window.matchMedia &&
     window.matchMedia("(prefers-color-scheme: dark)").matches
       ? "dark"
